@@ -3,34 +3,12 @@ from accounting import Accounting
 from datafeeder import DataFeeder
 from orderprocessor import OrderProcessor
 
-class StrategyBase:
-    """Базовый класс торговой стратегии.
-
-    Получает рыночные данные из DataFeeder, принимает решения и передаёт
-    целевые позиции в OrderProcessor через DoNeedPosition().
-    """
-
-    def __init__(self, datafeeder: DataFeeder, orderProcessor: OrderProcessor):
-        """
-        Args:
-            datafeeder: источник рыночных данных.
-            orderProcessor: исполнитель целевых позиций.
-        """
-        self.datafeeder = datafeeder
-        self.orderProcessor = orderProcessor
-
-    def on_execute(self):
-        """Один шаг стратегии (например, по событию OnDayEnd от Datafeed).
-        Реализуется в наследниках.
-        """
-        raise NotImplementedError("Subclasses should implement this!")
-
-
+from generic import StrategyBase,CapitalHandler
 
 class StrategyOFZ(StrategyBase):
     """Стратегия на ОФЗ: фиксированные купоны против флоатеров с хеджем через IRS."""
 
-    def __init__(self, datafeeder: DataFeeder, orderProcessor: OrderProcessor, fixes: list[Accounting], floaters: list[Accounting], irs:list[Accounting]):
+    def __init__(self, datafeeder: DataFeeder, orderProcessor: OrderProcessor, capitalHandler: CapitalHandler, fixes: list[Accounting], floaters: list[Accounting], irs:list[Accounting]):
         """
         Args:
             datafeeder: источник рыночных данных.
