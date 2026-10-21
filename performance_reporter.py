@@ -28,7 +28,7 @@ class PerformanceReporter:
         accs = self.accountingController.accountings
         pl = sum(a.value(self.datafeeder.get_price(a.instrument_info)) for a in accs)
         turnover = sum(a.turnover for a in accs)
-        self.history.append((self.datafeeder.timer.Now(), pl, turnover))
+        self.history.append((self.datafeeder.now(), pl, turnover))
 
     def report(self) -> dict:
         """Метрики по сохранённой истории. Безрисковая ставка = 0."""

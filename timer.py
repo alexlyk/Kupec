@@ -1,12 +1,14 @@
-class Timer:
-    """Источник текущего времени системы.
+from datetime import datetime
 
-    Кто двигает время, зависит от режима: в бэктесте это Environment,
-    в живой торговле другой класс. Публичный метод один: Now().
+class Timer:
+    """Часы бэктеста: время двигает Environment, остальные получают метод Now как функцию.
+
+    В живой торговле вместо него можно передать любую функцию без аргументов,
+    например datetime.now.
     """
 
     def __init__(self):
-        self._time = None
+        self._time: datetime = None
 
-    def Now(self):
+    def Now(self) -> datetime:
         return self._time

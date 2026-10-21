@@ -1,8 +1,8 @@
 import numpy as np
 from accounting import Accounting
 from datafeeder import DataFeeder
-from orderprocessor import OrderProcessor
-from strategies.generic import StrategyBase, CapitalHandler
+from typing import Callable
+from strategies.generic import StrategyBase
 
 class StrategyPair(StrategyBase):
     """Парная стратегия: спред = log(P1 / P2).
@@ -10,12 +10,12 @@ class StrategyPair(StrategyBase):
     Сигнал -1 (short leg1, long leg2), если спред > mean + k*sigma;
     +1 (long leg1, short leg2), если спред < mean - k*sigma; иначе 0 (позиции закрываются).
     mean и sigma считаются по предыдущим window значениям спреда.
-    Капитал из CapitalHandler равен гросс-позиции: по половине на каждую ногу.
+    Капитал стратегии равен гросс-позиции: по половине на каждую ногу.
     """
 
-    def __init__(self, id: str, datafeeder: DataFeeder, orderProcessor: OrderProcessor, capitalHandler: CapitalHandler,
-                 leg1: Accounting, leg2: Accounting, window: int = 60, k: float = 3):
-        super().__init__(id, datafeeder, orderProcessor, capitalHandler)
+    def __init__(self, id: str, datafeeder: DataFeeder, do_need_position: Callable[[Accounting, float], None],
+                 get_capital: Callable[[str], float], leg1: Accounting, leg2: Accounting, window: int = 60, k: float = 3):
+        super().__init__(id, datafeeder, do_need_position, get_capital)
         self.leg1, self.leg2, self.window, self.k = leg1, leg2, window, k
         self.spreads: list[float] = []
         self.signal = 0
@@ -36,7 +36,6 @@ class StrategyPair(StrategyBase):
         if signal == self.signal:
             return
         self.signal = signal
-        notional = self.capitalHandler.get_current_capital(self.id) / 2  # капитал = гросс, делится между ногами
-        a1, a2 = {1: ('BUY', 'SELL'), -1: ('SELL', 'BUY'), 0: ('FLAT', 'FLAT')}[signal]
-        self.orderProcessor.DoNeedPosition(self.leg1, a1, int(notional / p1))
-        self.orderProcessor.DoNeedPosition(self.leg2, a2, int(notional / p2))
+        notional = self.get_capital(self.id) / 2  # капитал = гросс, делится между ногами
+        self.do_need_position(self.leg1, signal * int(notional / p1))
+        self.do_need_position(self.leg2, -signal * int(notional / p2))

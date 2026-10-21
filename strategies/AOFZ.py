@@ -1,23 +1,23 @@
 
 from accounting import Accounting
 from datafeeder import DataFeeder
-from orderprocessor import OrderProcessor
 
-from strategies.generic import StrategyBase, CapitalHandler
+from typing import Callable
+from strategies.generic import StrategyBase
 
 class StrategyOFZ(StrategyBase):
     """Стратегия на ОФЗ: фиксированные купоны против флоатеров с хеджем через IRS."""
 
-    def __init__(self, id: str, datafeeder: DataFeeder, orderProcessor: OrderProcessor, capitalHandler: CapitalHandler, fixes: list[Accounting], floaters: list[Accounting], irs:list[Accounting]):
+    def __init__(self, id: str, datafeeder: DataFeeder, do_need_position: Callable[[Accounting, float], None], get_capital: Callable[[str], float], fixes: list[Accounting], floaters: list[Accounting], irs:list[Accounting]):
         """
         Args:
             datafeeder: источник рыночных данных.
-            orderProcessor: исполнитель целевых позиций.
+            do_need_position: функция, задающая целевую позицию.
             fixes: Accounting по ОФЗ с фиксированным купоном.
             floaters: Accounting по ОФЗ с плавающим купоном.
             irs: Accounting по открытым позициям IRS.
         """
-        super().__init__(id, datafeeder, orderProcessor, capitalHandler)
+        super().__init__(id, datafeeder, do_need_position, get_capital)
         self.fixes = fixes
         self.floaters = floaters
         self.irs = irs # opened positions for IRS
@@ -29,7 +29,7 @@ class StrategyOFZ(StrategyBase):
         px1 = self.datafeeder.get_price(self.fixes[0].instrument_info)
         px2 = self.datafeeder.get_price(self.floaters[0].instrument_info)
         if px1 > px2:
-            self.orderProcessor.DoNeedPosition(self.fixes[0], "SELL")
-            self.orderProcessor.DoNeedPosition(self.floaters[0], "BUY")
-            self.orderProcessor.DoNeedPosition(self.irs[0], "SELL")
+            self.do_need_position(self.fixes[0], -1)
+            self.do_need_position(self.floaters[0], 1)
+            self.do_need_position(self.irs[0], -1)
             # Если такого IRS нет, то создаём Accounting для IRS в этом месте. Передаём его в orderProcessor.DoNeedPosition.

@@ -1,6 +1,6 @@
-from typing import Literal
+from typing import Literal, Callable
+from datetime import datetime
 from instrument_info import InstrumentInfo
-from timer import Timer
 
 class Deal:
     def __init__(self, iinfo: InstrumentInfo, side: Literal['Buy', 'Sell'], quantity: float, price: float, timestamp, owner: str):
@@ -19,16 +19,16 @@ class Accounting:
     Создавать только через AccountingController.create_accounting().
     """
 
-    def __init__(self, instrument_info: InstrumentInfo, owner: str, timer: Timer):
+    def __init__(self, instrument_info: InstrumentInfo, owner: str, now: Callable[[], datetime]):
         """
         Args:
             instrument_info: инструмент, по которому ведётся учёт.
             owner: id стратегии, которой принадлежит accounting.
-            timer: источник времени для таймстемпов сделок.
+            now: функция, возвращающая текущее время, для таймстемпов сделок.
         """
         self.instrument_info = instrument_info
         self.owner = owner
-        self.timer = timer
+        self.now = now
         self.deals: list[Deal] = []
         self.position = 0.0  # знак: + длинная, - короткая
         self.cash = 0.0      # деньги, полученные/потраченные по сделкам
@@ -37,7 +37,7 @@ class Accounting:
         """Обработать исполненную сделку (из симулятора или от брокера/биржи)
         и обновить позицию и деньги.
         """
-        self.deals.append(Deal(self.instrument_info, side, quantity, price, self.timer.Now(), self.owner))
+        self.deals.append(Deal(self.instrument_info, side, quantity, price, self.now(), self.owner))
         sign = 1 if side == 'Buy' else -1
         self.position += sign * quantity
         self.cash -= sign * quantity * price
@@ -59,8 +59,8 @@ class AccountingController:
     OrderProcessor проверяет по нему, что работает с зарегистрированным Accounting.
     """
 
-    def __init__(self, timer: Timer):
-        self.timer = timer
+    def __init__(self, now: Callable[[], datetime]):
+        self.now = now
         self.accountings: list[Accounting] = []
 
     def create_accounting(self, instrument_info: InstrumentInfo, owner: str) -> Accounting:
@@ -73,6 +73,6 @@ class AccountingController:
         Returns:
             Новый объект Accounting.
         """
-        new_accounting = Accounting(instrument_info, owner, self.timer)
+        new_accounting = Accounting(instrument_info, owner, self.now)
         self.accountings.append(new_accounting)
         return new_accounting

@@ -17,7 +17,7 @@ class OrderProcessor:
         """
         self.accountingController = accountingController
 
-    def DoNeedPosition(self, accounting: Accounting, action, quantity: float = 0):
+    def DoNeedPosition(self, accounting: Accounting, quantity: float):
         """Сообщить, какая позиция нужна стратегии по инструменту.
 
         OrderProcessor сам решает, какие заявки нужно выставить, чтобы
@@ -26,9 +26,7 @@ class OrderProcessor:
         Args:
             accounting: учёт инструмента, по которому нужна позиция.
                 Должен быть зарегистрирован в accountingController.
-            action: целевое направление позиции: "BUY" - длинная, "SELL" - короткая,
-                "FLAT" - закрыть позицию.
-            quantity: целевой размер позиции (для BUY/SELL).
+            quantity: целевая позиция со знаком: > 0 длинная, < 0 короткая, 0 закрыть.
 
         Raises:
             ValueError: если accounting не зарегистрирован в accountingController.
@@ -36,8 +34,7 @@ class OrderProcessor:
         # Если такого accounting ещё нет в списке accountings, то бросаем ошибку!
         if accounting not in self.accountingController.accountings:
             raise ValueError("Accounting not found in the list of accountings!")
-        target = {'BUY': quantity, 'SELL': -quantity, 'FLAT': 0}[action]
-        self.send_order(accounting, target - accounting.position)
+        self.send_order(accounting, quantity - accounting.position)
 
     def send_order(self, accounting: Accounting, quantity: float):
         """Выставить заявку на quantity (знак задаёт направление). Реализуется в наследниках."""
