@@ -3,12 +3,12 @@ from accounting import Accounting
 from datafeeder import DataFeeder
 from orderprocessor import OrderProcessor
 
-from generic import StrategyBase,CapitalHandler
+from strategies.generic import StrategyBase, CapitalHandler
 
 class StrategyOFZ(StrategyBase):
     """Стратегия на ОФЗ: фиксированные купоны против флоатеров с хеджем через IRS."""
 
-    def __init__(self, datafeeder: DataFeeder, orderProcessor: OrderProcessor, capitalHandler: CapitalHandler, fixes: list[Accounting], floaters: list[Accounting], irs:list[Accounting]):
+    def __init__(self, id: str, datafeeder: DataFeeder, orderProcessor: OrderProcessor, capitalHandler: CapitalHandler, fixes: list[Accounting], floaters: list[Accounting], irs:list[Accounting]):
         """
         Args:
             datafeeder: источник рыночных данных.
@@ -17,7 +17,7 @@ class StrategyOFZ(StrategyBase):
             floaters: Accounting по ОФЗ с плавающим купоном.
             irs: Accounting по открытым позициям IRS.
         """
-        super().__init__(datafeeder, orderProcessor)
+        super().__init__(id, datafeeder, orderProcessor, capitalHandler)
         self.fixes = fixes
         self.floaters = floaters
         self.irs = irs # opened positions for IRS

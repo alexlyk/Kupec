@@ -4,14 +4,16 @@ from datafeeder import DataFeeder
 from orderprocessor import OrderProcessor
 
 class CapitalHandler:
+    """Единый реестр капитала, выделенного стратегиям, по их id."""
+
     def __init__(self):
-        pass
+        self.capital: dict[str, float] = {}
 
-    def get_current_capital(self):
-        pass
+    def get_current_capital(self, strategy_id: str) -> float:
+        return self.capital[strategy_id]
 
-    def set_capital(self):
-        pass
+    def set_capital(self, strategy_id: str, capital: float):
+        self.capital[strategy_id] = capital
 
 class StrategyBase:
     """Базовый класс торговой стратегии.
@@ -20,12 +22,15 @@ class StrategyBase:
     целевые позиции в OrderProcessor через DoNeedPosition().
     """
 
-    def __init__(self, datafeeder: DataFeeder, orderProcessor: OrderProcessor, capitalHandler: CapitalHandler):
+    def __init__(self, id: str, datafeeder: DataFeeder, orderProcessor: OrderProcessor, capitalHandler: CapitalHandler):
         """
         Args:
+            id: уникальное имя стратегии.
             datafeeder: источник рыночных данных.
             orderProcessor: исполнитель целевых позиций.
+            capitalHandler: реестр капитала стратегий.
         """
+        self.id = id
         self.datafeeder = datafeeder
         self.orderProcessor = orderProcessor
         self.capitalHandler = capitalHandler
@@ -35,5 +40,3 @@ class StrategyBase:
         Реализуется в наследниках.
         """
         raise NotImplementedError("Subclasses should implement this!")
-
-
