@@ -1,4 +1,13 @@
+from typing import Literal
+import decimal
 from instrument_info import InstrumentInfo
+
+class Deal:
+    def __init__(self, iinfo: InstrumentInfo, side: Literal['Buy', 'Sell'], quantity: float, price: float):
+        self.iinfo = iinfo
+        self.side = side
+        self.quantity = quantity
+        self.price = price
 
 class Accounting:
     """Учёт позиции, сделок и денег по одному инструменту.
@@ -14,12 +23,15 @@ class Accounting:
             instrument_info: инструмент, по которому ведётся учёт.
         """
         self.instrument_info = instrument_info
+        self.deals: list[Deal] = []
 
-    def on_deal(self):
+    def on_deal(self, side:Literal['Buy','Sell'], quantity: float, price: float):
         """Обработать исполненную сделку (из симулятора или от брокера/биржи)
         и обновить позицию и деньги. Не реализовано.
         """
-        raise NotImplementedError("Not implemented!")
+        new_deal = Deal(self.instrument_info, side, quantity, price)
+        self.deals.append(new_deal)
+        
 
 
 class AccountingController:
